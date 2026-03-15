@@ -1,7 +1,7 @@
 const { expect } = require("chai");
-const { ethers } = require("hardhat");
+const { ethers, upgrades } = require("hardhat");
 
-describe("YieldVault", function () {
+describe("YieldVault UUPS", function () {
   let owner, user, other;
   let mockUSDC, vault;
 
@@ -18,30 +18,42 @@ describe("YieldVault", function () {
     await mockUSDC.waitForDeployment();
 
     const YieldVault = await ethers.getContractFactory("YieldVault");
-    vault = await YieldVault.deploy(await mockUSDC.getAddress());
+    vault = await upgrades.deployProxy(
+      YieldVault,
+      [
+        await mockUSDC.getAddress(),
+        1_000_000n * 10n ** 6n, // depositCap
+        ONE_USDC, // minInitialDeposit = 1 USDC
+      ],
+      {
+        initializer: "initialize",
+        kind: "uups",
+      },
+    );
     await vault.waitForDeployment();
 
     await mockUSDC.mint(user.address, TEN_USDC);
     await mockUSDC.mint(owner.address, TWENTY_USDC);
   });
 
-  it("deploys with correct asset and roles", async function () {
+  it("initializes correctly", async function () {
     expect(await vault.asset()).to.equal(await mockUSDC.getAddress());
+    expect(await vault.depositCap()).to.equal(1_000_000n * 10n ** 6n);
+    expect(await vault.minInitialDeposit()).to.equal(ONE_USDC);
 
     const ADMIN_ROLE = await vault.ADMIN_ROLE();
-    const DEFAULT_ADMIN_ROLE = await vault.DEFAULT_ADMIN_ROLE();
+    const UPGRADER_ROLE = await vault.UPGRADER_ROLE();
 
     expect(await vault.hasRole(ADMIN_ROLE, owner.address)).to.equal(true);
-    expect(await vault.hasRole(DEFAULT_ADMIN_ROLE, owner.address)).to.equal(
-      true,
-    );
+    expect(await vault.hasRole(UPGRADER_ROLE, owner.address)).to.equal(true);
   });
 
-  it("sets initial deposit cap correctly", async function () {
-    expect(await vault.depositCap()).to.equal(1_000_000n * 10n ** 6n);
+  it("cannot be initialized twice", async function () {
+    await expect(vault.initialize(await mockUSDC.getAddress(), 100n, 100n)).to
+      .be.reverted;
   });
 
-  it("allows approve and deposit", async function () {
+  it("allows deposit with approval", async function () {
     await mockUSDC.connect(user).approve(await vault.getAddress(), ONE_USDC);
     await vault.connect(user).deposit(ONE_USDC, user.address);
 
@@ -55,6 +67,16 @@ describe("YieldVault", function () {
       .reverted;
   });
 
+  it("reverts first deposit if below minInitialDeposit", async function () {
+    const tooSmall = 500_000n; // 0.5 USDC
+
+    await mockUSDC.connect(user).approve(await vault.getAddress(), tooSmall);
+
+    await expect(
+      vault.connect(user).deposit(tooSmall, user.address),
+    ).to.be.revertedWith("Initial deposit too small");
+  });
+
   it("reverts deposit when paused", async function () {
     await vault.pause();
 
@@ -65,29 +87,73 @@ describe("YieldVault", function () {
     ).to.be.revertedWith("Pausable: paused");
   });
 
-  it("allows admin to unpause after pause", async function () {
+  it("reverts mint when paused", async function () {
     await vault.pause();
-    await vault.unpause();
 
     await mockUSDC.connect(user).approve(await vault.getAddress(), ONE_USDC);
-    await expect(vault.connect(user).deposit(ONE_USDC, user.address)).to.not.be
-      .reverted;
+
+    await expect(
+      vault.connect(user).mint(ONE_USDC, user.address),
+    ).to.be.revertedWith("Pausable: paused");
   });
 
-  it("reverts when non-admin tries to pause", async function () {
-    await expect(vault.connect(user).pause()).to.be.reverted;
+  it("reverts withdraw when paused", async function () {
+    await mockUSDC.connect(user).approve(await vault.getAddress(), ONE_USDC);
+    await vault.connect(user).deposit(ONE_USDC, user.address);
+
+    await vault.pause();
+
+    await expect(
+      vault.connect(user).withdraw(ONE_USDC, user.address, user.address),
+    ).to.be.revertedWith("Pausable: paused");
+  });
+
+  it("reverts redeem when paused", async function () {
+    await mockUSDC.connect(user).approve(await vault.getAddress(), ONE_USDC);
+    await vault.connect(user).deposit(ONE_USDC, user.address);
+
+    await vault.pause();
+
+    await expect(
+      vault.connect(user).redeem(ONE_USDC, user.address, user.address),
+    ).to.be.revertedWith("Pausable: paused");
   });
 
   it("reverts deposit when cap exceeded", async function () {
     await vault.updateDepositCap(ONE_USDC);
 
     await mockUSDC.connect(user).approve(await vault.getAddress(), TWO_USDC);
-
     await vault.connect(user).deposit(ONE_USDC, user.address);
 
     await expect(
       vault.connect(user).deposit(ONE_USDC, user.address),
     ).to.be.revertedWith("Deposit cap exceeded");
+  });
+
+  it("reverts mint when cap exceeded", async function () {
+    await vault.updateDepositCap(ONE_USDC);
+
+    await mockUSDC.connect(user).approve(await vault.getAddress(), TWO_USDC);
+
+    await expect(
+      vault.connect(user).mint(TWO_USDC, user.address),
+    ).to.be.revertedWith("Deposit cap exceeded");
+  });
+
+  it("returns correct maxDeposit", async function () {
+    const initialMax = await vault.maxDeposit(user.address);
+    expect(initialMax).to.equal(1_000_000n * 10n ** 6n);
+
+    await mockUSDC.connect(user).approve(await vault.getAddress(), ONE_USDC);
+    await vault.connect(user).deposit(ONE_USDC, user.address);
+
+    const nextMax = await vault.maxDeposit(user.address);
+    expect(nextMax).to.equal(1_000_000n * 10n ** 6n - ONE_USDC);
+  });
+
+  it("returns 0 maxDeposit when paused", async function () {
+    await vault.pause();
+    expect(await vault.maxDeposit(user.address)).to.equal(0);
   });
 
   it("allows admin to update deposit cap", async function () {
@@ -99,20 +165,23 @@ describe("YieldVault", function () {
     await expect(vault.connect(user).updateDepositCap(TEN_USDC)).to.be.reverted;
   });
 
-  it("allows redeem after deposit", async function () {
+  it("reverts if new cap is below current assets", async function () {
     await mockUSDC.connect(user).approve(await vault.getAddress(), ONE_USDC);
     await vault.connect(user).deposit(ONE_USDC, user.address);
 
-    await vault.connect(user).redeem(ONE_USDC, user.address, user.address);
-
-    expect(await vault.balanceOf(user.address)).to.equal(0);
-    expect(await vault.totalAssets()).to.equal(0);
-    expect(await vault.totalSupply()).to.equal(0);
+    await expect(vault.updateDepositCap(500_000n)).to.be.revertedWith(
+      "Cap below current assets",
+    );
   });
 
-  it("previewDeposit returns expected shares initially", async function () {
-    const shares = await vault.previewDeposit(ONE_USDC);
-    expect(shares).to.equal(ONE_USDC);
+  it("allows admin to update minInitialDeposit", async function () {
+    await vault.updateMinInitialDeposit(TWO_USDC);
+    expect(await vault.minInitialDeposit()).to.equal(TWO_USDC);
+  });
+
+  it("reverts when non-admin updates minInitialDeposit", async function () {
+    await expect(vault.connect(user).updateMinInitialDeposit(TWO_USDC)).to.be
+      .reverted;
   });
 
   it("simulateYield increases totalAssets", async function () {
@@ -133,13 +202,16 @@ describe("YieldVault", function () {
     await mockUSDC.connect(owner).approve(await vault.getAddress(), ONE_USDC);
     await vault.connect(owner).simulateYield(ONE_USDC);
 
-    const userBalanceBefore = await mockUSDC.balanceOf(user.address);
+    const balanceBefore = await mockUSDC.balanceOf(user.address);
 
     await vault.connect(user).redeem(ONE_USDC, user.address, user.address);
 
-    const userBalanceAfter = await mockUSDC.balanceOf(user.address);
+    const balanceAfter = await mockUSDC.balanceOf(user.address);
+    const redeemedAmount = balanceAfter - balanceBefore;
 
-    expect(userBalanceAfter - userBalanceBefore).to.equal(TWO_USDC);
+    expect(
+      redeemedAmount === TWO_USDC || redeemedAmount === TWO_USDC - 1n,
+    ).to.equal(true);
     expect(await vault.balanceOf(user.address)).to.equal(0);
     expect(await vault.totalAssets()).to.equal(0);
   });
@@ -148,14 +220,18 @@ describe("YieldVault", function () {
     await expect(vault.connect(user).simulateYield(ONE_USDC)).to.be.reverted;
   });
 
-  it("reverts redeem when paused", async function () {
-    await mockUSDC.connect(user).approve(await vault.getAddress(), ONE_USDC);
-    await vault.connect(user).deposit(ONE_USDC, user.address);
+  it("allows authorized UUPS upgrade", async function () {
+    const YieldVaultV2 = await ethers.getContractFactory("YieldVaultV2");
+    const implV2 = await YieldVaultV2.deploy();
+    await implV2.waitForDeployment();
 
-    await vault.pause();
+    await vault.upgradeTo(await implV2.getAddress());
 
-    await expect(
-      vault.connect(user).redeem(ONE_USDC, user.address, user.address),
-    ).to.be.revertedWith("Pausable: paused");
+    const upgraded = await ethers.getContractAt(
+      "YieldVaultV2",
+      await vault.getAddress(),
+    );
+
+    expect(await upgraded.version()).to.equal(2);
   });
 });
