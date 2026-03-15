@@ -1,18 +1,34 @@
 const express = require("express");
 const db = require("../db");
-const { vaultRead } = require("../Contract");
 
 const router = express.Router();
 
-router.get("/stats", async (req, res) => {
-  const totalAssets = await vaultRead.totalAssets();
-  const totalSupply = await vaultRead.totalSupply();
+router.get("/:address/position", async (req, res) => {
+  const address = req.params.address.toLowerCase();
 
-  res.json({
-    tvl: totalAssets.toString(),
-    totalShares: totalSupply.toString(),
-    apy: 12.5,
-  });
+  const result = await db.query(
+    "SELECT * FROM user_positions WHERE user_address = $1",
+    [address],
+  );
+
+  res.json(
+    result.rows[0] || {
+      user_address: address,
+      asset_balance: "0",
+      share_balance: "0",
+    },
+  );
+});
+
+router.get("/transactions/:address", async (req, res) => {
+  const address = req.params.address.toLowerCase();
+
+  const result = await db.query(
+    "SELECT * FROM transactions WHERE user_address = $1 ORDER BY created_at DESC",
+    [address],
+  );
+
+  res.json(result.rows);
 });
 
 module.exports = router;

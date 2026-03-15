@@ -3,32 +3,17 @@ const db = require("../db");
 
 const router = express.Router();
 
-router.get("/:address/position", async (req, res) => {
-  const address = req.params.address.toLowerCase();
-
+router.get("/status/:txHash", async (req, res) => {
   const result = await db.query(
-    "SELECT * FROM user_positions WHERE user_address = $1",
-    [address],
+    "SELECT * FROM bridge_status WHERE tx_hash = $1",
+    [req.params.txHash],
   );
 
-  res.json(
-    result.rows[0] || {
-      user_address: address,
-      asset_balance: "0",
-      share_balance: "0",
-    },
-  );
-});
+  if (!result.rows.length) {
+    return res.status(404).json({ error: "Bridge transaction not found" });
+  }
 
-router.get("/transactions/:address", async (req, res) => {
-  const address = req.params.address.toLowerCase();
-
-  const result = await db.query(
-    "SELECT * FROM transactions WHERE user_address = $1 ORDER BY created_at DESC",
-    [address],
-  );
-
-  res.json(result.rows);
+  res.json(result.rows[0]);
 });
 
 module.exports = router;

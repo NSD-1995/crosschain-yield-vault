@@ -1,8 +1,13 @@
-const rateLimit = require("express-rate-limit");
-
-module.exports = rateLimit({
-  windowMs: 60 * 1000,
-  max: 60,
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+module.exports = function validate(schema) {
+  return (req, res, next) => {
+    const result = schema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({
+        error: "Validation failed",
+        details: result.error.flatten(),
+      });
+    }
+    req.validatedBody = result.data;
+    next();
+  };
+};

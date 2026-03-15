@@ -15,23 +15,19 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use(pinoHttp({ logger }));
+// app.use(pinoHttp({ logger }));
 app.use(rateLimiter);
-
-app.use((req, res, next) => {
-  console.log("middleware");
-});
 
 app.get("/health", (req, res) => {
   console.log("routereceived");
-  // res.json({ ok: true });
+  res.json({ ok: true });
 });
 
-// app.use("/vault", vaultRoutes);
-// app.use("/user", userRoutes);
-// app.use("/transactions", userRoutes);
-// app.use("/bridge", bridgeRoutes);
-// app.use("/admin", adminRoutes);
+app.use("/vault", vaultRoutes);
+app.use("/user", userRoutes);
+app.use("/transactions", userRoutes);
+app.use("/bridge", bridgeRoutes);
+app.use("/admin", adminRoutes);
 
 app.use((err, req, res, next) => {
   logger.error({ err }, "Unhandled error");

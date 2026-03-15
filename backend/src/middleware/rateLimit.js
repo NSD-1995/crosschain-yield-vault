@@ -1,8 +1,8 @@
-module.exports = function requireRole(role) {
-  // return (req, res, next) => {
-  //   if (!req.user || req.user.role !== role) {
-  //     return res.status(403).json({ error: "Forbidden" });
-  //   }
-  //   next();
-  // };
-};
+const rateLimit = require("express-rate-limit");
+
+module.exports = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
