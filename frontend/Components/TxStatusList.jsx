@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import useWallet from "@/hooks/useWallet";
+import usePolling from "@/hooks/usePolling";
 import { getTransactions } from "@/services/api";
 import {
   Activity,
@@ -48,45 +48,14 @@ function getStatusStyles(status) {
 
 export default function TxStatusList() {
   const { account, isConnected } = useWallet();
-  const [items, setItems] = useState([]);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    let mounted = true;
+  const { data, error, loading } = usePolling(
+    () => getTransactions(account),
+    5000,
+    Boolean(isConnected && account),
+  );
 
-    async function loadTransactions() {
-      if (!isConnected || !account) {
-        setItems([]);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        const data = await getTransactions(account);
-        if (mounted) {
-          setItems(Array.isArray(data) ? data : []);
-          setError("");
-        }
-      } catch (err) {
-        if (mounted) {
-          setError(err.message || "Failed to load transactions");
-        }
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    }
-
-    loadTransactions();
-    const id = setInterval(loadTransactions, 5000);
-
-    return () => {
-      mounted = false;
-      clearInterval(id);
-    };
-  }, [account, isConnected]);
+  const items = Array.isArray(data) ? data : [];
 
   function shortHash(hash) {
     if (!hash) return "-";
