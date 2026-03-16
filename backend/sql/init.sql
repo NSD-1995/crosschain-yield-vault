@@ -54,3 +54,15 @@ CREATE TABLE IF NOT EXISTS bridge_status (
   destination_chain TEXT,
   updated_at TIMESTAMP DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS bridge_transfers (
+  id SERIAL PRIMARY KEY,
+  user_address TEXT NOT NULL,
+  amount NUMERIC NOT NULL,
+  source_chain TEXT NOT NULL,
+  destination_chain TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  nonce BIGINT,
+  tx_hash TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);

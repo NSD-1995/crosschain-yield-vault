@@ -1,6 +1,5 @@
 const express = require("express");
 const cors = require("cors");
-const pinoHttp = require("pino-http");
 const config = require("./config");
 const logger = require("./logger");
 const rateLimiter = require("./middleware/ratelimit");
@@ -15,17 +14,14 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-// app.use(pinoHttp({ logger }));
 app.use(rateLimiter);
 
 app.get("/health", (req, res) => {
-  console.log("routereceived");
   res.json({ ok: true });
 });
 
 app.use("/vault", vaultRoutes);
 app.use("/user", userRoutes);
-app.use("/transactions", userRoutes);
 app.use("/bridge", bridgeRoutes);
 app.use("/admin", adminRoutes);
 
