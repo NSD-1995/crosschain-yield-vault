@@ -132,30 +132,6 @@ export default function AdminPage() {
         <section className="grid grid-cols-1 gap-6 xl:grid-cols-3">
           <div className="space-y-6 xl:col-span-2">
             <div className="rounded-3xl bg-white p-5 shadow-md ring-1 ring-slate-200 md:p-6">
-              <div className="mb-4 flex items-start gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
-                  <KeyRound className="h-5 w-5" />
-                </div>
-
-                <div>
-                  <h2 className="text-lg font-semibold text-slate-900">
-                    Admin JWT Token
-                  </h2>
-                  <p className="text-sm text-slate-500">
-                    Paste your admin token to load protected monitoring data.
-                  </p>
-                </div>
-              </div>
-
-              <textarea
-                value={token}
-                onChange={(e) => setToken(e.target.value)}
-                className="min-h-[120px] w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-200"
-                placeholder="Paste admin token"
-              />
-            </div>
-
-            <div className="rounded-3xl bg-white p-5 shadow-md ring-1 ring-slate-200 md:p-6">
               <div className="mb-5 flex items-start gap-3">
                 <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-red-100 text-red-600">
                   <PauseCircle className="h-5 w-5" />
