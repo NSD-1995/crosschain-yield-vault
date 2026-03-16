@@ -3,8 +3,9 @@
 import { useState } from "react";
 import useWallet from "@/hooks/useWallet";
 import { approveToken, bridgeTokens } from "@/services/contract";
-
+import { initiateBridge } from "@/services/api";
 import { useUiStore } from "@/store/ui-store";
+
 const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_MOCK_USDC_ADDRESS;
 const BRIDGE_SENDER_ADDRESS = process.env.NEXT_PUBLIC_BRIDGE_SENDER_ADDRESS;
 
@@ -14,7 +15,9 @@ export default function BridgeForm() {
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
   const [txHash, setTxHash] = useState("");
+  const [bridgeApiMessage, setBridgeApiMessage] = useState("");
   const { addTx, updateTx, setGlobalError } = useUiStore();
+
   const expectedChainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID || 31337);
   const wrongNetwork = isConnected && chainId !== expectedChainId;
 
@@ -22,6 +25,7 @@ export default function BridgeForm() {
     e.preventDefault();
     setError("");
     setTxHash("");
+    setBridgeApiMessage("");
 
     if (!isConnected || !account) {
       const message = "Connect wallet first";
@@ -55,7 +59,6 @@ export default function BridgeForm() {
       await approveTx.wait();
 
       const tx = await bridgeTokens(amount);
-
       bridgeHash = tx.hash;
 
       addTx({
@@ -69,7 +72,29 @@ export default function BridgeForm() {
       const receipt = await tx.wait();
 
       if (receipt?.status === 1) {
-        updateTx(bridgeHash, { status: "confirmed" });
+        updateTx(bridgeHash, { status: "confirmed", error: "" });
+
+        // Save bridge record in backend DB
+        try {
+          const bridgeRes = await initiateBridge({
+            tx_hash: bridgeHash,
+            user_address: account,
+            amount: amount,
+            nonce: Date.now(),
+            source_chain: "hardhat",
+            destination_chain: "arbitrum",
+          });
+
+          setBridgeApiMessage(
+            `Bridge record created: ${bridgeRes.tx_hash || bridgeHash}`,
+          );
+        } catch (apiErr) {
+          console.error("Bridge DB initiation failed:", apiErr);
+          setBridgeApiMessage(
+            "Bridge transaction succeeded, but backend status record was not created.",
+          );
+        }
+
         setStatus("confirmed");
       } else {
         updateTx(bridgeHash, {
@@ -78,6 +103,7 @@ export default function BridgeForm() {
         });
 
         setStatus("failed");
+        setError("Bridge transaction reverted");
       }
 
       setTxHash(bridgeHash);
@@ -129,6 +155,12 @@ export default function BridgeForm() {
       {txHash && (
         <div className="rounded-xl border border-green-300 bg-green-50 p-3 text-green-700 break-all">
           Bridge submitted: {txHash}
+        </div>
+      )}
+
+      {bridgeApiMessage && (
+        <div className="rounded-xl border border-blue-300 bg-blue-50 p-3 text-blue-700 break-all">
+          {bridgeApiMessage}
         </div>
       )}
 

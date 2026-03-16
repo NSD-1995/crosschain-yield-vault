@@ -1,7 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { pauseVault, updateCap, simulateYield } from "@/services/api";
+import {
+  pauseVault,
+  unpauseVault,
+  updateCap,
+  simulateYield,
+} from "@/services/api";
 import AdminMetrics from "@/Components/AdminMetrics";
 import SuspiciousTransactionsTable from "@/Components/SuspiciousTransactionsTable";
 import EventLogTable from "@/Components/EventLogTable";
@@ -17,10 +22,25 @@ export default function AdminPage() {
     try {
       setMessage("");
       setError("");
-      const result = await pauseVault(token);
-      setMessage(`Vault paused: ${result.txHash}`);
+
+      await pauseVault(token);
+
+      setMessage("Vault paused successfully");
     } catch (err) {
       setError(err.message || "Pause failed");
+    }
+  }
+
+  async function handleUnpause() {
+    try {
+      setMessage("");
+      setError("");
+
+      await unpauseVault(token);
+
+      setMessage("Vault unpaused successfully");
+    } catch (err) {
+      setError(err.message || "Unpause failed");
     }
   }
 
@@ -28,8 +48,11 @@ export default function AdminPage() {
     try {
       setMessage("");
       setError("");
-      const result = await updateCap(token, newCap);
-      setMessage(`Cap updated: ${result.txHash}`);
+
+      await updateCap(token, newCap);
+
+      setMessage("Deposit cap updated successfully");
+      setNewCap("");
     } catch (err) {
       setError(err.message || "Cap update failed");
     }
@@ -39,8 +62,11 @@ export default function AdminPage() {
     try {
       setMessage("");
       setError("");
-      const result = await simulateYield(token, yieldAmount);
-      setMessage(`Yield simulated: ${result.txHash}`);
+
+      await simulateYield(token, yieldAmount);
+
+      setMessage("Yield simulated successfully");
+      setYieldAmount("");
     } catch (err) {
       setError(err.message || "Yield update failed");
     }
@@ -52,6 +78,7 @@ export default function AdminPage() {
 
       <AdminMetrics />
 
+      {/* Admin Token */}
       <div className="rounded-2xl border p-4 shadow-sm space-y-3">
         <label className="block text-sm font-medium">Admin JWT Token</label>
         <textarea
@@ -62,24 +89,38 @@ export default function AdminPage() {
         />
       </div>
 
+      {/* Vault Controls */}
       <div className="rounded-2xl border p-4 shadow-sm space-y-3">
-        <h2 className="text-lg font-semibold">Pause Vault</h2>
-        <button
-          onClick={handlePause}
-          className="rounded-xl bg-red-600 px-4 py-2 text-white"
-        >
-          Pause Vault
-        </button>
+        <h2 className="text-lg font-semibold">Vault Controls</h2>
+
+        <div className="flex gap-3">
+          <button
+            onClick={handlePause}
+            className="rounded-xl bg-red-600 px-4 py-2 text-white"
+          >
+            Pause Vault
+          </button>
+
+          <button
+            onClick={handleUnpause}
+            className="rounded-xl bg-green-600 px-4 py-2 text-white"
+          >
+            Unpause Vault
+          </button>
+        </div>
       </div>
 
+      {/* Update Cap */}
       <div className="rounded-2xl border p-4 shadow-sm space-y-3">
         <h2 className="text-lg font-semibold">Update Deposit Cap</h2>
+
         <input
           value={newCap}
           onChange={(e) => setNewCap(e.target.value)}
           className="w-full rounded-xl border px-3 py-2"
           placeholder="Enter new cap"
         />
+
         <button
           onClick={handleCapUpdate}
           className="rounded-xl bg-blue-600 px-4 py-2 text-white"
@@ -88,14 +129,17 @@ export default function AdminPage() {
         </button>
       </div>
 
+      {/* Simulate Yield */}
       <div className="rounded-2xl border p-4 shadow-sm space-y-3">
         <h2 className="text-lg font-semibold">Simulate Yield</h2>
+
         <input
           value={yieldAmount}
           onChange={(e) => setYieldAmount(e.target.value)}
           className="w-full rounded-xl border px-3 py-2"
           placeholder="Enter yield amount"
         />
+
         <button
           onClick={handleYieldUpdate}
           className="rounded-xl bg-green-600 px-4 py-2 text-white"
@@ -104,6 +148,7 @@ export default function AdminPage() {
         </button>
       </div>
 
+      {/* Messages */}
       {message && (
         <div className="rounded-xl border border-green-300 bg-green-50 p-3 text-green-700">
           {message}
@@ -116,6 +161,7 @@ export default function AdminPage() {
         </div>
       )}
 
+      {/* Admin Monitoring */}
       <SuspiciousTransactionsTable token={token} />
       <EventLogTable token={token} />
     </main>

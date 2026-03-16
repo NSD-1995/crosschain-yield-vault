@@ -27,7 +27,14 @@ export function getUserPosition(address) {
 }
 
 export function getTransactions(address) {
-  return request(`/transactions/${address}`);
+  return request(`/user/${address}/transactions`);
+}
+
+export function initiateBridge(data) {
+  return request("/bridge/initiate", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 }
 
 export function getBridgeStatus(txHash) {
@@ -44,14 +51,44 @@ export function pauseVault(token) {
   });
 }
 
-export function updateCap(token, newCap) {
-  return request("/admin/cap-update", {
+export function updateCap(token, depositCap) {
+  return request("/admin/deposit-cap", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ newCap }),
+    body: JSON.stringify({ depositCap }),
   });
+}
+
+export function getAdminStatus(token) {
+  return request("/admin/status", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export function getAdminEvents(token) {
+  return (
+    request("/admin/events"),
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+}
+
+export function getSuspiciousTransactions(token) {
+  return (
+    request("/admin/suspicious-transactions"),
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
 }
 
 export function simulateYield(token, amount) {
@@ -64,18 +101,12 @@ export function simulateYield(token, amount) {
   });
 }
 
-export function getAdminEvents(token) {
-  return request("/admin/events", {
+export function unpauseVault(token) {
+  return request("/admin/unpause", {
+    method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  });
-}
-
-export function getSuspiciousTransactions(token) {
-  return request("/admin/suspicious-transactions", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    body: JSON.stringify({}),
   });
 }

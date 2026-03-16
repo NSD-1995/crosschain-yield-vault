@@ -3,6 +3,8 @@ const cors = require("cors");
 const config = require("./config");
 const logger = require("./logger");
 const rateLimiter = require("./middleware/ratelimit");
+const authVerification = require("./middleware/auth");
+const roles = require("./middleware/roles");
 const { startIndexer } = require("./indexer/indexer");
 
 const vaultRoutes = require("./routes/vault");
@@ -23,7 +25,9 @@ app.get("/health", (req, res) => {
 app.use("/vault", vaultRoutes);
 app.use("/user", userRoutes);
 app.use("/bridge", bridgeRoutes);
-app.use("/admin", adminRoutes);
+
+// protect admin routes with JWT + admin role
+app.use("/admin", authVerification, roles("admin"), adminRoutes);
 
 app.use((err, req, res, next) => {
   logger.error({ err }, "Unhandled error");
