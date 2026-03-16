@@ -1,21 +1,45 @@
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
+function getToken() {
+  if (typeof window === "undefined") return "";
+  return localStorage.getItem("token") || "";
+}
+
 async function request(path, options = {}) {
+  const token = getToken();
+
   const response = await fetch(`${BASE_URL}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers || {}),
     },
     cache: "no-store",
   });
 
+  const text = await response.text();
+
   if (!response.ok) {
-    const text = await response.text();
     throw new Error(text || `Request failed: ${response.status}`);
   }
 
-  return response.json();
+  return text ? JSON.parse(text) : {};
+}
+
+export function login(email, password) {
+  return request("/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+export function logout() {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+  }
+  return Promise.resolve({ ok: true });
 }
 
 export function getVaultStats() {
@@ -41,72 +65,42 @@ export function getBridgeStatus(txHash) {
   return request(`/bridge/status/${txHash}`);
 }
 
-export function pauseVault(token) {
+export function pauseVault() {
   return request("/admin/pause", {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
     body: JSON.stringify({}),
   });
 }
 
-export function updateCap(token, depositCap) {
+export function unpauseVault() {
+  return request("/admin/unpause", {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+}
+
+export function updateCap(depositCap) {
   return request("/admin/deposit-cap", {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
     body: JSON.stringify({ depositCap }),
   });
 }
 
-export function getAdminStatus(token) {
-  return request("/admin/status", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+export function getAdminStatus() {
+  return request("/admin/status");
 }
 
-export function getAdminEvents(token) {
-  return (
-    request("/admin/events"),
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
+export function getAdminEvents() {
+  return request("/admin/events");
 }
 
-export function getSuspiciousTransactions(token) {
-  return (
-    request("/admin/suspicious-transactions"),
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
+export function getSuspiciousTransactions() {
+  return request("/admin/suspicious-transactions");
 }
 
-export function simulateYield(token, amount) {
+export function simulateYield(amount) {
   return request("/admin/yield-update", {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
     body: JSON.stringify({ amount }),
-  });
-}
-
-export function unpauseVault(token) {
-  return request("/admin/unpause", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({}),
   });
 }

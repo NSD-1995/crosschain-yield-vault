@@ -1,0 +1,268 @@
+{
+  "info": {
+    "_postman_id": "31055435-8ba1-4b28-9d9d-8113545a1deb",
+    "name": "Cross-Chain Yield Vault Postman collection",
+    "description": "Postman collection for testing Cross-Chain Yield Vault APIs",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "40409402"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Vault",
+      "item": [
+        {
+          "name": "Vault Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vault/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["vault", "stats"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Vault Deposit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"amount\": \"100000000\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vault/deposit",
+              "host": ["{{baseUrl}}"],
+              "path": ["vault", "deposit"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "User Position",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/user/{{wallet}}/position",
+              "host": ["{{baseUrl}}"],
+              "path": ["user", "{{wallet}}", "position"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "User Transactions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/user/{{wallet}}/transactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["user", "{{wallet}}", "transactions"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Bridge",
+      "item": [
+        {
+          "name": "Bridge Initiate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"user_address\": \"{{wallet}}\",\n    \"source_chain\": \"11155111\",\n    \"destination_chain\": \"421614\",\n    \"amount\": \"100000000\",\n    \"nonce\": 1,\n      \"tx_hash\": \"0xbridge123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/bridge/initiate",
+              "host": ["{{baseUrl}}"],
+              "path": ["bridge", "initiate"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Bridge Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bridge/status/0xbridge123",
+              "host": ["{{baseUrl}}"],
+              "path": ["bridge", "status", "0xbridge123"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Bridge History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bridge/history/{{wallet}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["bridge", "history", "{{wallet}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Admin Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "status"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Pause Vault",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/pause",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "pause"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Unpause Vault",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/unpause",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "unpause"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Deposit Cap",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"depositCap\": \"500000000\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/deposit-cap",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "deposit-cap"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000"
+    },
+    {
+      "key": "wallet",
+      "value": "0x5f5c1018333d0db7a74b13082b65850240ad4af9"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "default"
+    }
+  ]
+}

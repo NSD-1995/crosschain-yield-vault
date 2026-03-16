@@ -4,7 +4,6 @@ module.exports = {
   port: Number(process.env.PORT || 3001),
   databaseUrl: process.env.DATABASE_URL,
   jwtSecret: process.env.JWT_SECRET,
-
   rpcUrl: process.env.SEPOLIA_RPC_URL,
   privateKey: process.env.PRIVATE_KEY,
 

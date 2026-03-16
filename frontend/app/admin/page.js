@@ -23,7 +23,7 @@ export default function AdminPage() {
       setMessage("");
       setError("");
 
-      await pauseVault(token);
+      await pauseVault();
 
       setMessage("Vault paused successfully");
     } catch (err) {
@@ -36,7 +36,7 @@ export default function AdminPage() {
       setMessage("");
       setError("");
 
-      await unpauseVault(token);
+      await unpauseVault();
 
       setMessage("Vault unpaused successfully");
     } catch (err) {
@@ -49,7 +49,7 @@ export default function AdminPage() {
       setMessage("");
       setError("");
 
-      await updateCap(token, newCap);
+      await updateCap(newCap);
 
       setMessage("Deposit cap updated successfully");
       setNewCap("");
@@ -63,7 +63,7 @@ export default function AdminPage() {
       setMessage("");
       setError("");
 
-      await simulateYield(token, yieldAmount);
+      await simulateYield(yieldAmount);
 
       setMessage("Yield simulated successfully");
       setYieldAmount("");

@@ -4,6 +4,8 @@ const config = require("../config");
 module.exports = function auth(req, res, next) {
   const header = req.headers.authorization;
 
+  console.log("Authorization header:", header);
+
   if (!header || !header.startsWith("Bearer ")) {
     return res.status(401).json({ error: "Missing token" });
   }
@@ -11,9 +13,14 @@ module.exports = function auth(req, res, next) {
   const token = header.split(" ")[1];
 
   try {
-    req.user = jwt.verify(token, config.jwtSecret);
+    const decoded = jwt.verify(token, config.jwtSecret);
+
+    console.log("Decoded user:", decoded);
+
+    req.user = decoded;
     next();
-  } catch {
+  } catch (err) {
+    console.log("JWT verify error:", err.message);
     return res.status(401).json({ error: "Invalid token" });
   }
 };
