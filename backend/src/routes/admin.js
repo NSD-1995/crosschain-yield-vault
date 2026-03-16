@@ -54,6 +54,35 @@ router.post(
   },
 );
 
+router.get("/events", auth, requireRole("admin"), async (req, res) => {
+  const result = await db.query(
+    `SELECT id, event_name, tx_hash, contract_address, block_number, payload, created_at
+     FROM processed_events
+     ORDER BY id DESC
+     LIMIT 50`,
+  );
+
+  res.json(result.rows);
+});
+
+router.get(
+  "/suspicious-transactions",
+  auth,
+  requireRole("admin"),
+  async (req, res) => {
+    const result = await db.query(
+      `SELECT id, user_address, tx_hash, type, amount, chain_name, status, metadata, created_at
+     FROM transactions
+     WHERE amount::numeric > 100000000
+        OR status = 'failed'
+     ORDER BY id DESC
+     LIMIT 50`,
+    );
+
+    res.json(result.rows);
+  },
+);
+
 module.exports = router;
 
 //
