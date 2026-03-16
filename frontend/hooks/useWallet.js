@@ -10,40 +10,11 @@ export default function useWallet() {
 
   const EXPECTED_CHAIN = Number(process.env.NEXT_PUBLIC_CHAIN_ID || 31337);
 
-  async function connectWallet() {
+  async function readWalletState() {
     try {
-      setError("");
-
-      if (typeof window === "undefined" || !window.ethereum) {
-        throw new Error("MetaMask not installed");
-      }
-
-      const accounts = await window.ethereum.request({
-        method: "eth_requestAccounts",
-      });
-
-      const chainHex = await window.ethereum.request({
-        method: "eth_chainId",
-      });
-
-      const currentChainId = parseInt(chainHex, 16);
-
-      setAccount(accounts[0] || "");
-      setChainId(currentChainId);
-      setIsConnected(accounts.length > 0);
-
-      if (currentChainId !== EXPECTED_CHAIN) {
-        setError("Wrong network connected.");
-      }
-    } catch (err) {
-      setError(err?.message || "Wallet connection failed");
-    }
-  }
-
-  async function refreshWallet() {
-    try {
-      if (typeof window === "undefined" || !window.ethereum) {
+      if (!window.ethereum) {
         setError("MetaMask not installed.");
+        setIsConnected(false);
         return;
       }
 
@@ -55,26 +26,64 @@ export default function useWallet() {
         method: "eth_chainId",
       });
 
-      const currentChainId = parseInt(chainHex, 16);
+      const parsedChainId = parseInt(chainHex, 16);
 
       setAccount(accounts[0] || "");
-      setChainId(currentChainId);
+      setChainId(parsedChainId);
       setIsConnected(accounts.length > 0);
 
-      if (currentChainId !== EXPECTED_CHAIN) {
-        setError("Wrong network connected.");
+      if (parsedChainId !== EXPECTED_CHAIN) {
+        setError(`Wrong network. Please switch to chain ID ${EXPECTED_CHAIN}.`);
       } else {
         setError("");
       }
     } catch (err) {
-      setError(err?.message || "Wallet refresh failed");
+      setError(err.message || "Failed to read wallet state");
+      setIsConnected(false);
     }
   }
 
-  useEffect(() => {
-    refreshWallet();
+  async function connectWallet() {
+    try {
+      setError("");
 
-    if (typeof window === "undefined" || !window.ethereum) return;
+      if (!window.ethereum) {
+        throw new Error("MetaMask not found");
+      }
+
+      const accounts = await window.ethereum.request({
+        method: "eth_requestAccounts",
+      });
+
+      const chainHex = await window.ethereum.request({
+        method: "eth_chainId",
+      });
+
+      const parsedChainId = parseInt(chainHex, 16);
+
+      setAccount(accounts[0] || "");
+      setChainId(parsedChainId);
+      setIsConnected(accounts.length > 0);
+
+      if (parsedChainId !== EXPECTED_CHAIN) {
+        setError(`Wrong network. Please switch to chain ID ${EXPECTED_CHAIN}.`);
+      }
+    } catch (err) {
+      setError(err.message || "Wallet connection failed");
+    }
+  }
+
+  function disconnectWallet() {
+    setAccount("");
+    setChainId(null);
+    setIsConnected(false);
+    setError("");
+  }
+
+  useEffect(() => {
+    readWalletState();
+
+    if (!window.ethereum) return;
 
     const handleAccountsChanged = (accounts) => {
       setAccount(accounts[0] || "");
@@ -82,11 +91,11 @@ export default function useWallet() {
     };
 
     const handleChainChanged = (chainHex) => {
-      const currentChainId = parseInt(chainHex, 16);
-      setChainId(currentChainId);
+      const parsedChainId = parseInt(chainHex, 16);
+      setChainId(parsedChainId);
 
-      if (currentChainId !== EXPECTED_CHAIN) {
-        setError("Wrong network connected.");
+      if (parsedChainId !== EXPECTED_CHAIN) {
+        setError(`Wrong network. Please switch to chain ID ${EXPECTED_CHAIN}.`);
       } else {
         setError("");
       }
@@ -96,9 +105,13 @@ export default function useWallet() {
     window.ethereum.on("chainChanged", handleChainChanged);
 
     return () => {
-      if (!window.ethereum?.removeListener) return;
-      window.ethereum.removeListener("accountsChanged", handleAccountsChanged);
-      window.ethereum.removeListener("chainChanged", handleChainChanged);
+      if (window.ethereum.removeListener) {
+        window.ethereum.removeListener(
+          "accountsChanged",
+          handleAccountsChanged,
+        );
+        window.ethereum.removeListener("chainChanged", handleChainChanged);
+      }
     };
   }, [EXPECTED_CHAIN]);
 
@@ -108,5 +121,6 @@ export default function useWallet() {
     isConnected,
     error,
     connectWallet,
+    disconnectWallet,
   };
 }

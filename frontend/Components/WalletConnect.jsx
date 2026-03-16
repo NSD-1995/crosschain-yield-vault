@@ -5,7 +5,14 @@ import useWallet from "@/hooks/useWallet";
 const EXPECTED_CHAIN_ID = Number(process.env.NEXT_PUBLIC_CHAIN_ID || 31337);
 
 export default function WalletConnect() {
-  const { account, chainId, isConnected, error, connectWallet } = useWallet();
+  const {
+    account,
+    chainId,
+    isConnected,
+    error,
+    connectWallet,
+    disconnectWallet,
+  } = useWallet();
 
   const wrongNetwork = isConnected && chainId !== EXPECTED_CHAIN_ID;
 
@@ -37,6 +44,13 @@ export default function WalletConnect() {
               Wrong network. Please switch to chain ID {EXPECTED_CHAIN_ID}.
             </div>
           )}
+
+          <button
+            onClick={disconnectWallet}
+            className="rounded-xl bg-red-600 px-4 py-2 text-white"
+          >
+            Disconnect Wallet
+          </button>
         </div>
       )}
 

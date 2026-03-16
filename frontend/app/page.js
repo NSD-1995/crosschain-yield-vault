@@ -1,27 +1,29 @@
-import WalletConnect from "../Components/WalletConnect";
-import VaultStats from "../Components/VaultStats";
-import PositionCard from "../Components/PositionCard";
-import DepositForm from "../Components/DepositForm";
-import WithdrawForm from "../Components/WithdrawForm";
-import BridgeForm from "../Components/BridgeForm";
-import TxStatusList from "../Components/TxStatusList";
+import Link from "next/link";
 
-export default function DashboardPage() {
+export default function Page() {
   return (
     <main className="p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">User Dashboard</h1>
+      <h1 className="text-3xl font-bold">Cross-Chain Yield Vault</h1>
 
-      <WalletConnect />
-      <VaultStats />
-      <PositionCard />
+      <p className="text-gray-600">
+        Production-style DeFi dashboard prototype.
+      </p>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <DepositForm />
-        <WithdrawForm />
+      <div className="flex gap-4">
+        <Link
+          href="/dashboard"
+          className="rounded-xl border px-4 py-2 hover:bg-gray-50"
+        >
+          User Dashboard
+        </Link>
+
+        <Link
+          href="/admin"
+          className="rounded-xl border px-4 py-2 hover:bg-gray-50"
+        >
+          Admin Dashboard
+        </Link>
       </div>
-
-      <BridgeForm />
-      <TxStatusList />
     </main>
   );
 }
