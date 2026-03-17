@@ -1,100 +1,41 @@
 # Cross-Chain Yield Vault Platform
 
-A **production-style DeFi platform** implementing an **ERC-4626 Yield Vault with Cross-Chain Bridge Simulation**, backend indexing infrastructure, and a full-stack Web3 dashboard.
+A production-style DeFi platform implementing an ERC-4626 Yield Vault
+with Cross-Chain Bridge Simulation, backend indexing infrastructure, and
+a full-stack Web3 dashboard.
 
-The system enables users to:
-
-- Deposit tokens into a vault
-- Earn simulated yield
-- Withdraw funds
-- Bridge assets across chains
-- Monitor transaction activity
-- Use admin tools for protocol control
+The system allows users to deposit tokens, earn simulated yield,
+withdraw funds, and bridge assets across chains while providing
+monitoring tools and admin controls.
 
 ---
 
 # Project Overview
 
-This project demonstrates how a **modern Web3 application** is architected using multiple layers of infrastructure.
+This project demonstrates how a modern Web3 application is structured
+using:
 
-### Core Technologies Used
+- Smart contracts
+- Backend indexing services
+- A Web3 frontend dashboard
+- Database monitoring
+- DevOps infrastructure
 
-- Smart Contracts (Solidity)
-- Backend Indexing Services
-- Web3 Frontend Dashboard
-- Database Monitoring
-- DevOps Infrastructure
-
-The architecture separates **on-chain asset custody** from **off-chain monitoring and analytics**, mirroring real production DeFi systems.
-
----
-
-# System Architecture
-
-The platform is structured into **four primary layers**:
-
-1. Frontend Layer
-2. Backend API Layer
-3. Smart Contract Layer
-4. Database Layer
-
-### Architecture Flow
-
-# Cross-Chain Yield Vault Platform
-
-A **production-style DeFi platform** implementing an **ERC-4626 Yield Vault with Cross-Chain Bridge Simulation**, backend indexing infrastructure, and a full-stack Web3 dashboard.
-
-The system enables users to:
-
-- Deposit tokens into a vault
-- Earn simulated yield
-- Withdraw funds
-- Bridge assets across chains
-- Monitor transaction activity
-- Use admin tools for protocol control
-
----
-
-# Project Overview
-
-This project demonstrates how a **modern Web3 application** is architected using multiple layers of infrastructure.
-
-### Core Technologies Used
-
-- Smart Contracts (Solidity)
-- Backend Indexing Services
-- Web3 Frontend Dashboard
-- Database Monitoring
-- DevOps Infrastructure
-
-The architecture separates **on-chain asset custody** from **off-chain monitoring and analytics**, mirroring real production DeFi systems.
+The architecture separates on-chain asset custody from off-chain
+monitoring and analytics.
 
 ---
 
 # System Architecture
 
-The platform is structured into **four primary layers**:
+The platform consists of four primary layers:
 
-1. Frontend Layer
-2. Backend API Layer
-3. Smart Contract Layer
-4. Database Layer
+1.  Frontend (Next.js Dashboard)
+2.  Backend API (Node.js + Express)
+3.  Smart Contracts (Solidity)
+4.  Database (PostgreSQL)
 
-### Architecture Flow
-
-User Wallet
-│
-▼
-Frontend (Next.js Dashboard)
-│
-▼
-Backend API (Node.js + Express)
-│
-▼
-PostgreSQL Database
-│
-▼
-Smart Contracts (ERC-4626 Vault + Bridge)
+User Wallet → Frontend → Backend API → PostgreSQL → Smart Contracts
 
 ---
 
@@ -102,52 +43,14 @@ Smart Contracts (ERC-4626 Vault + Bridge)
 
 ## Deposit Flow
 
-User Wallet
-│
-▼
-Frontend UI
-│
-▼
-Smart Contract (Deposit)
-│
-▼
-Blockchain Event
-│
-▼
-Backend Indexer
-│
-▼
-PostgreSQL Database
-│
-▼
-Frontend Dashboard Update
-
----
+User Wallet → Frontend UI → Smart Contract (deposit) → Blockchain Event
+→ Backend Indexer → PostgreSQL → Frontend Dashboard Update
 
 ## Bridge Flow
 
-User Bridge Request
-│
-▼
-Frontend UI
-│
-▼
-Backend API
-│
-▼
-Source Chain Bridge Contract
-│
-▼
-Relayer Verifies Event
-│
-▼
-Destination Chain Contract (Mint / Unlock)
-│
-▼
-Backend Database Update
-│
-▼
-Frontend Bridge Status Tracker
+User Bridge Request → Frontend UI → Backend API → Source Chain Bridge
+Contract → Relayer Verification → Destination Chain Mint/Unlock →
+Backend DB Update → Frontend Bridge Status Tracker
 
 ---
 
@@ -155,113 +58,89 @@ Frontend Bridge Status Tracker
 
 ## Frontend
 
-Built using **Next.js + React**.
+Built using Next.js + React.
 
-### Features
-
-- Wallet connection (MetaMask)
-- Deposit / Withdraw interface
-- Cross-chain bridge interface
-- Transaction lifecycle tracking
-- Admin monitoring dashboard
-- Vault statistics display
-- Backend health monitoring
-
-### Frontend Structure
-
-frontend/
-├── dashboard
-├── admin-panel
-├── wallet-integration
-├── vault-actions
-└── bridge-ui
-
----
+Features: - Wallet connection (MetaMask) - Deposit / Withdraw UI -
+Cross-chain bridge interface - Transaction lifecycle tracker - Admin
+dashboard - Vault statistics
 
 ## Backend
 
-Built using **Node.js + Express**.
+Built using Node.js + Express.
 
-### Responsibilities
-
-- Blockchain event indexing
-- Bridge transaction APIs
-- Admin control APIs
-- Transaction lifecycle tracking
-- Suspicious transaction detection
-- JWT-based admin authentication
-
-### Backend Structure
-
-backend/
-├── api-routes
-├── blockchain-indexer
-├── bridge-service
-├── admin-controllers
-└── monitoring-services
-
----
+Responsibilities: - Blockchain event indexing - Bridge transaction
+APIs - Admin control APIs - Suspicious transaction detection - JWT-based
+admin authentication
 
 ## Database
 
-**PostgreSQL** is used for persistent storage.
+PostgreSQL is used for persistent storage.
 
-### Stored Data
-
-- Transaction lifecycle records
-- Bridge transaction records
-- Blockchain event logs
-- Suspicious activity alerts
-
-### Example Tables
-
-transactions
-bridge_records
-event_logs
+Stores: - transactions - bridge_records - event_logs -
 suspicious_activity
 
----
+## Blockchain
 
-# Blockchain Layer
+ERC-4626 Yield Vault with: - deposit() - withdraw() - share minting -
+simulated yield - emergency pause - role-based access
 
-## ERC-4626 Yield Vault
-
-The vault implements the **ERC-4626 tokenized vault standard**.
-
-### Features
-
-- `deposit()`
-- `withdraw()`
-- Share minting
-- Simulated yield accrual
-- Deposit caps
-- Emergency pause mechanism
-- Role-based access control
-- UUPS upgradeable smart contracts
+Bridge contracts support: - lock/burn on source chain - mint/unlock on
+destination chain - nonce replay protection - signature validation
 
 ---
 
-## Cross-Chain Bridge Contracts
+# Local Development Setup
 
-Bridge logic simulates asset transfers between chains.
+## 1. Start Hardhat Node
 
-### Bridge Mechanism
+cd contracts npx hardhat clean npx hardhat node
 
-- Lock or burn tokens on source chain
-- Mint or unlock tokens on destination chain
-- Nonce-based replay protection
-- Relayer signature validation
-- Expiry-based bridge signatures
+## 2. Deploy Contracts
+
+Open another terminal:
+
+cd contracts npm run deploy:local
+
+## 3. Start Backend
+
+cd backend npm install npm run dev
+
+Backend runs on: http://localhost:5000
+
+## 4. Start Frontend
+
+cd frontend npm install npm run dev
+
+Open: http://localhost:3000
+
+---
+
+# Demo Credentials
+
+## User Account
+
+Email: user@test.com\
+Password: user123
+
+Capabilities: - Deposit - Withdraw - Bridge - View vault stats
+
+## Admin Account
+
+Email: admin@test.com\
+Password: admin123
+
+Capabilities: - Pause / Unpause vault - Update deposit cap - Simulate
+yield - View suspicious transactions
 
 ---
 
 # Project Structure
 
-crosschain-yield-vault
-│
-├── contracts
-├── backend
-├── frontend
-├── docker-compose.yml
-├── docs
-└── README.md
+crosschain-yield-vault │ ├── contracts ├── backend ├── frontend ├──
+docker-compose.yml ├── docs └── README.md
+
+---
+
+# License
+
+MIT License
